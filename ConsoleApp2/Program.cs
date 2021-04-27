@@ -6,145 +6,118 @@ namespace ConsoleApp2
     {
         static void Main(string[] args)
         {
+            Random random = new Random();
+            string[] archetypeArray = new string[] { "Goblin", "Human", "Elf" };
+            string[] playerCardTypeChoiceArray = new string[] { "RNA", "RA", "RE" };
+            Trigger trigger = new Trigger();
             do
             {
-                Random random = new Random();
                 int genAmount = 1;
                 int genAmountStore = 1;
-                int playerChoiceLength = 0;
-                string[] archetypeArray = new string[] { "Goblin", "Human", "Elf" };
+
                 Console.WriteLine();
                 Console.WriteLine("Please choose an archetype; Goblin, Human, Elf or Random.");
                 string playerChoice = Console.ReadLine();
-                Archetype choice = archetypeChoice(playerChoice);
-                while (choice == null)
+
+                bool stringValid = false;
+                do
                 {
-                    Console.WriteLine("Please Choose Again: Goblin, Human, Elf or Random.");
-                    playerChoice = Console.ReadLine();
-                    Console.WriteLine($"You have chosen {playerChoice}");
-                    choice = archetypeChoice(playerChoice);
-                }
-                string playerChoiceRandom = playerChoice;
-                if (playerChoiceRandom == "Random")
-                {
-                    playerChoiceLength = random.Next(0, archetypeArray.Length);
-                    playerChoice = (archetypeArray[playerChoiceLength]);
-                }
+                    stringValid = StringValid(playerChoice);
+                    while (!stringValid)
+                    {
+                        Console.WriteLine("Please Choose Again: Goblin, Human, Elf or Random.");
+                        playerChoice = Console.ReadLine();
+                        stringValid = StringValid(playerChoice);
+                    }
+                } while (!stringValid);
+                bool playerChoiceRandom = playerChoice == "Random";
+
+                Archetype choice = ArchetypeAssign(playerChoice, archetypeArray, playerChoiceRandom, out playerChoice);
+
                 Console.WriteLine();
                 Console.WriteLine("Please choose the card you wish to generate: RNA (Random No Abilities), RA (Random Abilities), RE (Random Effect) or RR (Random Card Type)");
                 string playerCardTypeChoice = Console.ReadLine();
-                string[] playerCardTypeChoiceArray = new string[] { "RNA", "RA", "RE" };
-                int playerCardTypeChoiceLength = 0;
-                string RRchosen = playerCardTypeChoice;
-                if (RRchosen == "RR")
-                {
-                    playerCardTypeChoiceLength = random.Next(0, playerCardTypeChoiceArray.Length);
-                    playerCardTypeChoice = (playerCardTypeChoiceArray[playerCardTypeChoiceLength]);
 
-                }
-                CardType card = CardTypeChoice(playerCardTypeChoice, choice);
-
-                while (card == null)
+                bool cardTypeValid = false;
+                do
                 {
-                    Console.WriteLine("Please Choose Again: RNA (Random No Abilities), RA (Random Abilities), RE (Random Effect) or RR (Random Card Type)");
-                    playerCardTypeChoice = Console.ReadLine();
-                    Console.WriteLine($"You have chosen {playerCardTypeChoice}");
-                    RRchosen = playerCardTypeChoice;
-                    if (RRchosen == "RR")
+                    cardTypeValid = CardTypeValid(playerCardTypeChoice);
+                    while (!cardTypeValid)
                     {
-                        playerCardTypeChoiceLength = random.Next(0, playerCardTypeChoiceArray.Length);
-                        playerCardTypeChoice = (playerCardTypeChoiceArray[playerCardTypeChoiceLength]);
+                        Console.WriteLine("Please Choose Again: RNA (Random No Abilities), RA (Random Abilities), RE (Random Effect) or RR (Random Card Type)");
+                        playerCardTypeChoice = Console.ReadLine();
+                        cardTypeValid = CardTypeValid(playerCardTypeChoice);
                     }
-                    card = CardTypeChoice(playerCardTypeChoice, choice);
+                } while (!cardTypeValid);
+                bool playerCardTypeChoiceRandom = playerCardTypeChoice == "RR";
 
-                }
 
+                CardType card = CardTypeAssign(playerCardTypeChoice, choice, playerCardTypeChoiceArray, playerCardTypeChoiceRandom, out playerCardTypeChoice);
 
-                int prefixLength = random.Next(choice.prefix.Length);
-                int affixLength = random.Next(card.affix.Length);
-                int effectsLength = random.Next(choice.effects.Length);
-                Console.WriteLine();
-                Console.WriteLine($"{playerChoice} {choice.prefix[prefixLength]} {card.affix[affixLength]} ({playerCardTypeChoice})");
-                Console.WriteLine($"Cost: {card.points}");
-                if (card.hp != 0)
+                Console.WriteLine("How many iterations would you like to generate of this card at once? (If just one, press 1)");
+                string genAmountInput = Console.ReadLine();
+                bool genAmountTrue = int.TryParse(genAmountInput, out genAmount);
+                if (genAmount == 0)
                 {
-                    Console.WriteLine($"Health: {card.hp}");
+                    genAmount++;
                 }
-                if (card.dm != 0)
-                {
-                    Console.WriteLine($"Damage: {card.dm}");
-                }
-                if (card.eff != 0)
-                {
-                    Console.WriteLine($"Effect Power: {Trigger.TriggerEffString} {choice.effects[effectsLength]} {card.eff}");
-                }
+                genAmountStore = genAmount;
+                Console.WriteLine($"Generating {genAmount} cards with current perameters.");
 
-                Console.WriteLine("Would you like to generate another card? Y/N");
-                if (char.ToLower(Console.ReadKey().KeyChar) == 'y')
+                Console.WriteLine($"Press Y to generate Card(s)");
+                while (char.ToLower(Console.ReadKey().KeyChar) == 'y')
                 {
-                    Console.WriteLine();
-                    Console.WriteLine("Would you like to use the same archetype and generation method? Y/N");
-                    if (char.ToLower(Console.ReadKey().KeyChar) == 'y')
+                    for (genAmount = genAmountStore; genAmount > 0; genAmount--)
                     {
-                        Console.WriteLine("How many iterations would you like to generate of this card at once? (If just one, press 1)");
-                        string genAmountInput = Console.ReadLine();
-                        bool genAmountTrue = int.TryParse(genAmountInput, out genAmount);
-                        if (genAmount == 0)
-                        {
-                            genAmount++;
-                        }
-                        genAmountStore = genAmount;
-                        Console.WriteLine(genAmount);
+                        choice = ArchetypeAssign(playerChoice, archetypeArray, playerChoiceRandom, out playerChoice);
+                        card = CardTypeAssign(playerCardTypeChoice, choice, playerCardTypeChoiceArray, playerCardTypeChoiceRandom, out playerCardTypeChoice);
+                        CardGeneration(card, choice, trigger, playerChoice, playerCardTypeChoice, genAmount);
                     }
-                    Console.WriteLine("Generate card? Y/N");
-                    while (char.ToLower(Console.ReadKey().KeyChar) == 'y')
-                    {
-                        for (genAmount = genAmountStore; genAmount > 0; genAmount--)
-                        {
-                            if (RRchosen == "RR")
-                            {
-                                playerCardTypeChoiceLength = random.Next(0, playerCardTypeChoiceArray.Length);
-                                playerCardTypeChoice = (playerCardTypeChoiceArray[playerCardTypeChoiceLength]);
-
-                            }
-                            if (playerChoiceRandom == "Random")
-                            {
-                                playerChoiceLength = random.Next(0, archetypeArray.Length);
-                                playerChoice = (archetypeArray[playerChoiceLength]);
-                            }
-                            card = CardTypeChoice(playerCardTypeChoice, choice);
-                            prefixLength = random.Next(choice.prefix.Length);
-                            affixLength = random.Next(card.affix.Length);
-                            effectsLength = random.Next(choice.effects.Length);
-                            Console.WriteLine();
-                            Console.WriteLine($"{playerChoice} {choice.prefix[prefixLength]} {card.affix[affixLength]} ({playerCardTypeChoice})");
-                            Console.WriteLine($"Cost: {card.points}");
-                            if (card.hp != 0)
-                            {
-                                Console.WriteLine($"Health: {card.hp}");
-                            }
-                            if (card.dm != 0)
-                            {
-                                Console.WriteLine($"Damage: {card.dm}");
-                            }
-                            if (card.eff != 0)
-                            {
-                                Console.WriteLine($"Effect Power: {Trigger.TriggerEffString} {choice.effects[effectsLength]} {card.eff}");
-                            }
-                            if (genAmount == 1)
-                            {
-                                Console.WriteLine("Again? Y/N");
-                            }
-                        }
-                    }
-                    Console.WriteLine();
-                    Console.WriteLine("Please press Y to generate another card.");
+                    Console.WriteLine("Press Y to generate with same settings");
                 }
+                Console.WriteLine("Press Y to start generator again");
             } while (char.ToLower(Console.ReadKey().KeyChar) == 'y');
 
         }
+        static string CardGeneration(CardType card, Archetype choice, Trigger trigger, string playerChoice, string playerCardTypeChoice, int genAmount)
+        {
+            Random random = new Random();
+            int prefixLength = random.Next(choice.prefix.Length);
+            int affixLength = random.Next(card.affix.Length);
+            int effectsLength = random.Next(choice.effects.Length);
+            Console.WriteLine();
+            Console.WriteLine($"{playerChoice} {choice.prefix[prefixLength]} {card.affix[affixLength]} ({playerCardTypeChoice})");
+            Console.WriteLine($"Cost: {card.points}");
+            if (card.hp != 0)
+            {
+                Console.WriteLine($"Health: {card.hp}");
+            }
+            if (card.dm != 0)
+            {
+                Console.WriteLine($"Damage: {card.dm}");
+            }
+            if (card.eff != 0)
+            {
+                Console.WriteLine($"Effect Power: {Trigger.TriggerEffString} {choice.effects[effectsLength]} {card.eff}");
+            }
+            return $"{playerChoice} {choice.prefix[prefixLength]} {card.affix[affixLength]} ({playerCardTypeChoice})";
+        }
 
-        static Archetype archetypeChoice(string playerChoice)
+        static Archetype ArchetypeAssign(string playerChoice, string[] archetypeArray, bool playerChoiceRandom, out string playerChoiceReturn)
+        {
+            Random random = new Random();
+            Archetype choice = ArchetypeChoice(playerChoice);
+            if (playerChoiceRandom == true)
+            {
+                int playerChoiceLength = random.Next(0, archetypeArray.Length);
+                playerChoice = (archetypeArray[playerChoiceLength]);
+                choice = ArchetypeChoice(playerChoice);
+            }
+            playerChoiceReturn = playerChoice;
+            return choice;
+
+        }
+        static Archetype ArchetypeChoice(string playerChoice)
         {
             switch (playerChoice)
             {
@@ -162,66 +135,31 @@ namespace ConsoleApp2
 
         }
 
-        static Archetype goblin = new Archetype
+        static bool StringValid(string playerChoice)
         {
-            pointsLow = 2,
-            pointsHigh = 7,
-            hpLow = 1,
-            hpHigh = 3,
-            dmLow = 1,
-            dmHigh = 4,
-            effLow = 1,
-            effHigh = 4,
-            effects = new string[] { "Rally", "Summon", "Bolt" },
-            prefix = new string[] { "Gnarled", "Squalid", "Gross", "Grotesque", "Wicked", "Aggravated", "Goblin", "Impish", }
-        };
+            string[] validArchetypes = new string[] { "Goblin", "Elf", "Human", "Random" };
+            return Array.Exists(validArchetypes, element => element == playerChoice);
+        }
 
-        static Archetype human = new Archetype
+        static bool CardTypeValid(string playerCardTypeChoice)
         {
-            pointsLow = 2,
-            pointsHigh = 10,
-            hpLow = 2,
-            hpHigh = 6,
-            dmLow = 2,
-            dmHigh = 5,
-            effLow = 1,
-            effHigh = 4,
-            effects = new string[] { "Charge", "Rally", "Heal" },
-            prefix = new string[] { "Burly", "Royal", "Tinkering", "Curious", "Hungry", "Loyal", "Human", "Angry" }
-        };
-
-        static Archetype elf = new Archetype
+            string[] validCardTypes = new string[] { "RNA", "RA", "RE", "RR" };
+            return Array.Exists(validCardTypes, element => element == playerCardTypeChoice);
+        }
+        static CardType CardTypeAssign(string playerCardTypeChoice, Archetype choice, string[] playerCardTypeChoiceArray, bool playerCardTypeChoiceRandom, out string playerCardTypeChoiceReturn)
         {
-            pointsLow = 2,
-            pointsHigh = 7,
-            hpLow = 2,
-            hpHigh = 5,
-            dmLow = 1,
-            dmHigh = 3,
-            effLow = 2,
-            effHigh = 6,
-            effects = new string[] { "Heal", "Summon", "Mill" },
-            prefix = new string[] { "Regal", "Slender", "Elvish", "Inquisitive", "Faerie", "Pixie", "Winged", "Fae", "Entish", "Satyr" }
+            Random random = new Random();
+            CardType card = CardTypeChoice(playerCardTypeChoice, choice);
+            if (playerCardTypeChoiceRandom == true)
+            {
+                int playerCardTypeChoiceLength = random.Next(0, playerCardTypeChoiceArray.Length);
+                playerCardTypeChoice = (playerCardTypeChoiceArray[playerCardTypeChoiceLength]);
+                card = CardTypeChoice(playerCardTypeChoice, choice);
+            }
+            playerCardTypeChoiceReturn = playerCardTypeChoice;
+            return card;
 
-        };
-
-        static Archetype random = new Archetype
-        {
-            pointsLow = 1,
-            pointsHigh = 11,
-            hpLow = 1,
-            hpHigh = 11,
-            dmLow = 1,
-            dmHigh = 10,
-            effLow = 1,
-            effHigh = 10,
-            effects = new string[] { "Rally", "Summon", "Bolt", "Charge", "Mill", "Heal" },
-            prefix = new string[] { "Grob", "Gnarled", "Squalid", "Gross", "Grotesque", "Wicked", "Aggravated", "Burly", "Royal", "Tinkering", "Curious", "Hungry", "Loyal", "Regal", "Slender", "Elvish", "Inquisitive", "Faerie", "Pixie" }
-
-
-        };
-
-
+        }
         static CardType CardTypeChoice(string playerCardTypeChoice, Archetype choice)
         {
 
@@ -250,6 +188,10 @@ namespace ConsoleApp2
                         Trigger.TriggerEffInt = random.Next(Enum.GetNames(typeof(Trigger.TriggerEff)).Length);
                         Trigger.TriggerEffString = Trigger.TriggerDesc[Trigger.TriggerEffInt];
                         card.eff = (card.eff / 2);
+                    }
+                    while (card.eff == 0)
+                    {
+                        card.eff++;
                     }
                     card.affix = new string[] { "Officer", "Crusader", "Marshal", "Captain", "Wizard", "Spellslinger", "Count", "Demon", "Fiend", "Imp", "Mage", "Witch", "Dryad"};
                     return card;
@@ -285,6 +227,66 @@ namespace ConsoleApp2
 
 
         }
+
+        static Archetype goblin = new Archetype
+        {
+            pointsLow = 2,
+            pointsHigh = 7,
+            hpLow = 1,
+            hpHigh = 3,
+            dmLow = 1,
+            dmHigh = 4,
+            effLow = 1,
+            effHigh = 7,
+            effects = new string[] { "Rally", "Summon", "Bolt" },
+            prefix = new string[] { "Grob", "Gnarled", "Squalid", "Gross", "Grotesque", "Wicked", "Aggravated", "Goblin", "Impish", }
+        };
+
+        static Archetype human = new Archetype
+        {
+            pointsLow = 2,
+            pointsHigh = 10,
+            hpLow = 2,
+            hpHigh = 6,
+            dmLow = 2,
+            dmHigh = 5,
+            effLow = 1,
+            effHigh = 8,
+            effects = new string[] { "Charge", "Rally", "Heal" },
+            prefix = new string[] { "Burly", "Royal", "Tinkering", "Curious", "Hungry", "Loyal", "Human", "Angry" }
+        };
+
+        static Archetype elf = new Archetype
+        {
+            pointsLow = 2,
+            pointsHigh = 7,
+            hpLow = 2,
+            hpHigh = 5,
+            dmLow = 1,
+            dmHigh = 3,
+            effLow = 4,
+            effHigh = 10,
+            effects = new string[] { "Heal", "Summon", "Mill" },
+            prefix = new string[] { "Regal", "Slender", "Elvish", "Inquisitive", "Faerie", "Pixie", "Winged", "Fae", "Entish", "Satyr" }
+
+        };
+
+        static Archetype random = new Archetype
+        {
+            pointsLow = 1,
+            pointsHigh = 11,
+            hpLow = 1,
+            hpHigh = 11,
+            dmLow = 1,
+            dmHigh = 10,
+            effLow = 1,
+            effHigh = 10,
+            effects = new string[] { "Rally", "Summon", "Bolt", "Charge", "Mill", "Heal" },
+            prefix = new string[] { "Grob", "Gnarled", "Squalid", "Gross", "Grotesque", "Wicked", "Aggravated", "Burly", "Royal", "Tinkering", "Curious", "Hungry", "Loyal", "Regal", "Slender", "Elvish", "Inquisitive", "Faerie", "Pixie" }
+
+
+        };
+
 
     }
 }
