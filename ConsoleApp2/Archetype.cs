@@ -17,6 +17,7 @@ namespace ConsoleApp2
         public int effHigh;
         public string[] effects;
         public string[] prefix;
+        public double[] effectsPower;
 
 
 

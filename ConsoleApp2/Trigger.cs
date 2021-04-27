@@ -23,6 +23,12 @@ namespace ConsoleApp2
             OPPONENT,
             ANYONE
         }
+        
+        public enum TriggerInputCard
+        {
+            THIS,
+            TARGET
+        }
 
         public static string[] TriggerDesc = new string[] {
             $"When a card is drawn by [[player]], ",

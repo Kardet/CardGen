@@ -9,12 +9,10 @@ namespace ConsoleApp2
             Random random = new Random();
             string[] archetypeArray = new string[] { "Goblin", "Human", "Elf" };
             string[] playerCardTypeChoiceArray = new string[] { "RNA", "RA", "RE" };
+            int genAmountStore = 1;
             Trigger trigger = new Trigger();
             do
             {
-                int genAmount = 1;
-                int genAmountStore = 1;
-
                 Console.WriteLine();
                 Console.WriteLine("Please choose an archetype; Goblin, Human, Elf or Random.");
                 string playerChoice = Console.ReadLine();
@@ -56,12 +54,9 @@ namespace ConsoleApp2
 
                 Console.WriteLine("How many iterations would you like to generate of this card at once? (If just one, press 1)");
                 string genAmountInput = Console.ReadLine();
-                bool genAmountTrue = int.TryParse(genAmountInput, out genAmount);
-                if (genAmount == 0)
-                {
-                    genAmount++;
-                }
-                genAmountStore = genAmount;
+
+                int genAmount = genAmountCheck(genAmountInput, out genAmountStore);
+
                 Console.WriteLine($"Generating {genAmount} cards with current perameters.");
 
                 Console.WriteLine($"Press Y to generate Card(s)");
@@ -78,6 +73,19 @@ namespace ConsoleApp2
                 Console.WriteLine("Press Y to start generator again");
             } while (char.ToLower(Console.ReadKey().KeyChar) == 'y');
 
+        }
+
+        static int genAmountCheck(string genAmountInput, out int genAmountStore)
+        {
+            int genAmount = 1;
+            genAmountStore = 1;
+            bool genAmountTrue = int.TryParse(genAmountInput, out genAmount);
+            if (genAmount == 0)
+            {
+                genAmount++;
+            }
+            genAmountStore = genAmount;
+            return genAmount;
         }
         static string CardGeneration(CardType card, Archetype choice, Trigger trigger, string playerChoice, string playerCardTypeChoice, int genAmount)
         {
@@ -102,7 +110,6 @@ namespace ConsoleApp2
             }
             return $"{playerChoice} {choice.prefix[prefixLength]} {card.affix[affixLength]} ({playerCardTypeChoice})";
         }
-
         static Archetype ArchetypeAssign(string playerChoice, string[] archetypeArray, bool playerChoiceRandom, out string playerChoiceReturn)
         {
             Random random = new Random();
@@ -134,13 +141,11 @@ namespace ConsoleApp2
             }
 
         }
-
         static bool StringValid(string playerChoice)
         {
             string[] validArchetypes = new string[] { "Goblin", "Elf", "Human", "Random" };
             return Array.Exists(validArchetypes, element => element == playerChoice);
         }
-
         static bool CardTypeValid(string playerCardTypeChoice)
         {
             string[] validCardTypes = new string[] { "RNA", "RA", "RE", "RR" };
@@ -227,7 +232,6 @@ namespace ConsoleApp2
 
 
         }
-
         static Archetype goblin = new Archetype
         {
             pointsLow = 2,
@@ -239,9 +243,9 @@ namespace ConsoleApp2
             effLow = 1,
             effHigh = 7,
             effects = new string[] { "Rally", "Summon", "Bolt" },
+            effectsPower = new double[] { 1, 0.75, 1.25 },
             prefix = new string[] { "Grob", "Gnarled", "Squalid", "Gross", "Grotesque", "Wicked", "Aggravated", "Goblin", "Impish", }
         };
-
         static Archetype human = new Archetype
         {
             pointsLow = 2,
@@ -253,9 +257,9 @@ namespace ConsoleApp2
             effLow = 1,
             effHigh = 8,
             effects = new string[] { "Charge", "Rally", "Heal" },
+            effectsPower = new double[] { 1, 1, 2 },
             prefix = new string[] { "Burly", "Royal", "Tinkering", "Curious", "Hungry", "Loyal", "Human", "Angry" }
         };
-
         static Archetype elf = new Archetype
         {
             pointsLow = 2,
@@ -267,10 +271,10 @@ namespace ConsoleApp2
             effLow = 4,
             effHigh = 10,
             effects = new string[] { "Heal", "Summon", "Mill" },
+            effectsPower = new double[] { 2, 0.75, 1.5 },
             prefix = new string[] { "Regal", "Slender", "Elvish", "Inquisitive", "Faerie", "Pixie", "Winged", "Fae", "Entish", "Satyr" }
 
         };
-
         static Archetype random = new Archetype
         {
             pointsLow = 1,
