@@ -10,6 +10,7 @@ namespace ConsoleApp2
             string[] archetypeArray = new string[] { "Goblin", "Human", "Elf" };
             string[] playerCardTypeChoiceArray = new string[] { "RNA", "RA", "RE" };
             int genAmountStore = 1;
+            int effectsLength = 0;
             Trigger trigger = new Trigger();
             do
             {
@@ -50,7 +51,7 @@ namespace ConsoleApp2
                 bool playerCardTypeChoiceRandom = playerCardTypeChoice == "RR";
 
 
-                CardType card = CardTypeAssign(playerCardTypeChoice, choice, playerCardTypeChoiceArray, playerCardTypeChoiceRandom, out playerCardTypeChoice);
+                CardType card = CardTypeAssign(playerCardTypeChoice, choice, playerCardTypeChoiceArray, playerCardTypeChoiceRandom, trigger, out playerCardTypeChoice, out effectsLength);
 
                 Console.WriteLine("How many iterations would you like to generate of this card at once? (If just one, press 1)");
                 string genAmountInput = Console.ReadLine();
@@ -65,8 +66,8 @@ namespace ConsoleApp2
                     for (genAmount = genAmountStore; genAmount > 0; genAmount--)
                     {
                         choice = ArchetypeAssign(playerChoice, archetypeArray, playerChoiceRandom, out playerChoice);
-                        card = CardTypeAssign(playerCardTypeChoice, choice, playerCardTypeChoiceArray, playerCardTypeChoiceRandom, out playerCardTypeChoice);
-                        CardGeneration(card, choice, trigger, playerChoice, playerCardTypeChoice, genAmount);
+                        card = CardTypeAssign(playerCardTypeChoice, choice, playerCardTypeChoiceArray, playerCardTypeChoiceRandom, trigger, out playerCardTypeChoice, out effectsLength);
+                        CardGeneration(card, choice, trigger, playerChoice, playerCardTypeChoice, genAmount, effectsLength);
                     }
                     Console.WriteLine("Press Y to generate with same settings");
                 }
@@ -87,12 +88,11 @@ namespace ConsoleApp2
             genAmountStore = genAmount;
             return genAmount;
         }
-        static string CardGeneration(CardType card, Archetype choice, Trigger trigger, string playerChoice, string playerCardTypeChoice, int genAmount)
+        static string CardGeneration(CardType card, Archetype choice, Trigger trigger, string playerChoice, string playerCardTypeChoice, int genAmount, int effectsLength)
         {
             Random random = new Random();
             int prefixLength = random.Next(choice.prefix.Length);
             int affixLength = random.Next(card.affix.Length);
-            int effectsLength = random.Next(choice.effects.Length);
             Console.WriteLine();
             Console.WriteLine($"{playerChoice} {choice.prefix[prefixLength]} {card.affix[affixLength]} ({playerCardTypeChoice})");
             Console.WriteLine($"Cost: {card.points}");
@@ -151,27 +151,32 @@ namespace ConsoleApp2
             string[] validCardTypes = new string[] { "RNA", "RA", "RE", "RR" };
             return Array.Exists(validCardTypes, element => element == playerCardTypeChoice);
         }
-        static CardType CardTypeAssign(string playerCardTypeChoice, Archetype choice, string[] playerCardTypeChoiceArray, bool playerCardTypeChoiceRandom, out string playerCardTypeChoiceReturn)
+        static CardType CardTypeAssign(string playerCardTypeChoice, Archetype choice, string[] playerCardTypeChoiceArray, bool playerCardTypeChoiceRandom, Trigger trigger, out string playerCardTypeChoiceReturn, out int effectsLength)
         {
             Random random = new Random();
-            CardType card = CardTypeChoice(playerCardTypeChoice, choice);
+            CardType card = CardTypeChoice(playerCardTypeChoice, choice, trigger, out effectsLength);
             if (playerCardTypeChoiceRandom == true)
             {
                 int playerCardTypeChoiceLength = random.Next(0, playerCardTypeChoiceArray.Length);
                 playerCardTypeChoice = (playerCardTypeChoiceArray[playerCardTypeChoiceLength]);
-                card = CardTypeChoice(playerCardTypeChoice, choice);
+                card = CardTypeChoice(playerCardTypeChoice, choice, trigger, out effectsLength);
             }
             playerCardTypeChoiceReturn = playerCardTypeChoice;
             return card;
 
         }
-        static CardType CardTypeChoice(string playerCardTypeChoice, Archetype choice)
+        static CardType CardTypeChoice(string playerCardTypeChoice, Archetype choice, Trigger trigger, out int effectsLength)
         {
 
 
             Random random = new Random();
 
             CardType card = new CardType();
+
+            effectsLength = random.Next(choice.effects.Length);
+            double effectsPower = choice.effectsPower[effectsLength];
+            Trigger.TriggerEffInt = random.Next(Enum.GetNames(typeof(Trigger.TriggerEff)).Length);
+            double triggerPower = Trigger.TriggerPower[Trigger.TriggerEffInt];
 
             switch (playerCardTypeChoice)
             {
@@ -184,16 +189,10 @@ namespace ConsoleApp2
                 case "RA":
                     card.hp = random.Next(choice.hpLow, choice.hpHigh);
                     card.dm = random.Next(choice.dmLow, choice.dmHigh);
-                    card.eff = random.Next(choice.effLow, choice.effHigh) / 3 * 2;
+                    card.eff = (int)Math.Ceiling(random.Next(choice.effLow, choice.effHigh) * effectsPower);
                     card.points = ((card.hp + card.dm + card.eff) / 2);
-                    Trigger.TriggerEffString = "";
-                    card.effTrigger = random.Next(0, 3);
-                    if (card.effTrigger == 1)
-                    {
-                        Trigger.TriggerEffInt = random.Next(Enum.GetNames(typeof(Trigger.TriggerEff)).Length);
-                        Trigger.TriggerEffString = Trigger.TriggerDesc[Trigger.TriggerEffInt];
-                        card.eff = (card.eff / 2);
-                    }
+                    Trigger.TriggerEffString = Trigger.TriggerDesc[Trigger.TriggerEffInt];
+                    card.eff = (int)(card.eff * triggerPower);
                     while (card.eff == 0)
                     {
                         card.eff++;
@@ -201,29 +200,14 @@ namespace ConsoleApp2
                     card.affix = new string[] { "Officer", "Crusader", "Marshal", "Captain", "Wizard", "Spellslinger", "Count", "Demon", "Fiend", "Imp", "Mage", "Witch", "Dryad"};
                     return card;
                 case "RE":
-                    card.eff = random.Next(choice.effLow, choice.effHigh) / 3 * 2;
+                    card.eff = (int)Math.Ceiling(random.Next(choice.effLow, choice.effHigh) * effectsPower);
                     card.points = (card.eff / 2);
-                    Trigger.TriggerEffString = "";
-                    card.effTrigger = random.Next(0, 2);
-                    if (card.effTrigger == 1)
-                    {
-                        Trigger.TriggerEffInt = random.Next(Enum.GetNames(typeof(Trigger.TriggerEff)).Length);
-                        Trigger.TriggerEffString = Trigger.TriggerDesc[Trigger.TriggerEffInt];
-                        card.eff = (card.eff / 3);
-                        while (card.eff == 0 && card.points == 0)
-                        {
-                            card.eff++;
-                            card.points++;
-                        }
-                        while (card.eff == 0)
-                        {
-                            card.eff++;
-                        }
-                    }
+                    Trigger.TriggerEffString = Trigger.TriggerDesc[Trigger.TriggerEffInt];
+                        card.eff = (int)(card.eff * triggerPower);
                     while (card.eff == 0)
-                    {
-                        card.eff++;
-                    }
+                        {
+                            card.eff++;
+                        }
                     card.affix = new string[] { "Bolt", "Chant", "Spell", "Trick", "Enchantment", "Essence", "Arc", "Rush", "Strike", "Gambit" };
                     return card;
                 default:
@@ -232,6 +216,7 @@ namespace ConsoleApp2
 
 
         }
+
         static Archetype goblin = new Archetype
         {
             pointsLow = 2,
